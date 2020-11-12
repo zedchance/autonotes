@@ -9,7 +9,10 @@ if os.path.exists(filename):
     exit(1)
 file = open(filename, 'w')
 print(f'Created {filename}')
-new_note_str = f'\\section{today}\n\n'
+new_note_str = '\\section{' \
+               f'{today}' \
+               '}\n\n'
+file.write(new_note_str)
 file.close()
 
 # Open master file
