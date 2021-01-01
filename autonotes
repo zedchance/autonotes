@@ -5,7 +5,7 @@ PYTHON_ARGCOMPLETE_OK
 """
 
 import os
-from datetime import date
+from datetime import datetime
 from milc import cli
 import milc.subcommand.config
 import milc.questions
@@ -18,14 +18,28 @@ def emph(string):
     return f'{emph}{string}{end}'
 
 
-@cli.entrypoint('autonotes')
+def base_preamble(dir_name):
+    """ Create a base preamble.tex file """
+    preamble_path = f'{dir_name}/preamble.tex'
+    cli.log.info(f'Creating bare {emph(preamble_path)}')
+    preamble_file = open(preamble_path, 'w')
+    preamble_str = f'% {dir_name} preamble\n' \
+                   '\\usepackage{imakeidx}\n' \
+                   '\\makeindex[columns=3, title=Date Index, intoc]\n' \
+                   '\n% Author name\n' \
+                   '\\author{}\n'
+    preamble_file.write(preamble_str)
+    preamble_file.close()
+
+
+@cli.entrypoint('autonotes – automatically create LaTeX notes')
 def main(cli):
     cli.log.info("No subcommand specified")
     cli.print_usage()
 
 
 @cli.argument('-n', '--name', help='Name of directory to initialize')
-@cli.argument('-p', '--preamble', help='Path to preamble file', default='')
+@cli.argument('-p', '--preamble', help='Path to preamble file', default=None)
 @cli.subcommand('Initialize a new autonotes directory')
 def init(cli):
     """ Creates a new autonotes directory """
@@ -33,24 +47,26 @@ def init(cli):
     dir_name = cli.config.init.name
     if dir_name == None:
         dir_name = milc.questions.question("Enter directory name: ")
-    cli.log.debug(f'dir_name is {dir_name}')
     if os.path.isdir(dir_name):
-        cli.log.error(f'Directory {emph(dir_name)} already exists.')
+        cli.log.error(f'Directory {emph(dir_name)} already exists')
         exit(2)
-    cli.log.info(f'Creating {emph(dir_name)} directory.')
+    cli.log.info(f'Creating {emph(dir_name)} directory')
     os.mkdir(dir_name)
 
     # Preamble
     preamble_path = cli.config.init.preamble
-    if preamble_path == '':
-        preamble_path = f'{dir_name}/preamble.tex'
-        cli.log.info(f'Creating {emph(preamble_path)}.')
-        preamble_file = open(preamble_path, 'w')
-        preamble_str = f'% {dir_name} preamble\n' \
-                       '\\author{}\n'
-        preamble_file.write(preamble_str)
+    if preamble_path is None:
+        base_preamble(dir_name)
+    elif os.path.isdir(preamble_path):
+        cli.log.error(f'{emph(preamble_path)} is a directory, can\'t copy')
+        base_preamble(dir_name)
+    elif not os.path.exists(preamble_path):
+        cli.log.error(f'{emph(preamble_path)} doesn\'t exist, can\'t copy')
+        base_preamble(dir_name)
     else:
-        cli.log.info(f'Copying {emph(preamble_path)}.')
+        if not '.tex' in preamble_path:
+            cli.log.warning(f'{emph(preamble_path)} isn\'t a .tex file, copying anyway')
+        cli.log.info(f'Copying {emph(preamble_path)}')
         input_preamble = open(preamble_path, 'r')
         input_preamble_lines = input_preamble.readlines()
         input_preamble.close()
@@ -60,7 +76,7 @@ def init(cli):
 
     # Create master.tex file
     master_path = f'{dir_name}/master.tex'
-    cli.log.info(f'Creating {emph(master_path)}.')
+    cli.log.info(f'Creating {emph(master_path)}')
     master = open(master_path, 'w')
     master_str = f'% {dir_name} master file\n' \
                  '\n' \
@@ -77,7 +93,8 @@ def init(cli):
                  '\\tableofcontents\n' \
                  '\\newpage\n' \
                  '\n%BEGIN NOTES\n%END NOTES\n\n' \
-                 '\\end{document}'
+                 '\\printindex\n\n' \
+                 '\\end{document}\n'
     master.write(master_str)
     master.close()
 
@@ -93,11 +110,15 @@ def new(cli):
         cli.log.error(f'I can\'t find a {emph("master.tex")} file, '
                       'are you inside an autonotes directory?')
         exit(3)
+
     # Filename
     filename = cli.config.new.filename
-    today = date.today().strftime("%Y%m%d")
+    # TODO figure out the datetime_fmt stuff, and get the config to work
+    # cli.config.general.datetime_fmt
+    file_date = datetime.now().strftime("%Y%m%d")
+    today = datetime.now().strftime("%b %m")
     if not cli.config.no_date:
-        filename += f'-{today}'
+        filename += f'-{file_date}'
     filename += '.tex'
     if os.path.exists(filename):
         cli.log.error(f'File {emph(filename)} already exists.')
@@ -106,26 +127,31 @@ def new(cli):
     # Note title
     title = cli.config.new.title
     if title == '':
-        title = today
+        title = f'{filename} title'
 
     # Open file for writing
     file = open(filename, 'w')
-    cli.log.info(f'Created {emph(filename)}.')
+    cli.log.info(f'Created {emph(filename)}')
     new_note_str = '\\section{' \
                    f'{title}' \
-                   '}\n\n'
+                   '}\n' \
+                   '\\marginpar{' \
+                   f'{today}' \
+                   '\\index{' \
+                   f'{today}' \
+                   '}}\n'
     file.write(new_note_str)
     file.close()
 
     # Open master file
-    cli.log.info(f'Inserting entry into {emph("master.tex")}.')
+    cli.log.info(f'Inserting entry into {emph("master.tex")}')
     master = open('master.tex', 'r')
     lines = master.readlines()
     master.close()
     try:
         end = lines.index("%END NOTES\n")
     except:
-        cli.log.error(f'Incorrect {emph("master.tex")} file.')
+        cli.log.error(f'Incorrect {emph("master.tex")} file, aborting')
         exit(1)
     lines.insert(end, '\\input{'
                       f'{filename}'
