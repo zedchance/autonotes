@@ -107,7 +107,11 @@ def new(cli):
     master = open('master.tex', 'r')
     lines = master.readlines()
     master.close()
-    end = lines.index("%END NOTES\n")
+    try:
+        end = lines.index("%END NOTES\n")
+    except:
+        cli.log.error(f'Incorrect {emph("master.tex")} file.')
+        exit(1)
     lines.insert(end, '\\input{'
                       f'{filename}'
                       '}\n')
