@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+"""autonotes – cli to automatically create LaTeX notes
+
+PYTHON_ARGCOMPLETE_OK
+"""
 
 import os
 from datetime import date
@@ -12,7 +16,7 @@ def emph(string):
     return f'{emph}{string}{end}'
 
 
-@cli.entrypoint('Main')
+@cli.entrypoint('autonotes')
 def main(cli):
     cli.log.info("No subcommand specified")
     cli.print_usage()
@@ -20,13 +24,13 @@ def main(cli):
 
 @cli.argument('-n', '--name', help='Name of directory to initialize', required=True)
 @cli.argument('-p', '--preamble', help='Path to preamble file', default='')
-@cli.subcommand('Create a new dir')
+@cli.subcommand('Initialize a new autonotes directory')
 def init(cli):
     """ Creates a new autonotes directory """
     # Make dir
     dir_name = cli.config.init.name
     if dir_name == None:
-        cli.log.error('Please ')
+        cli.log.error('Please specify directory name.')
         cli.print_usage()
         exit(2)
     cli.log.debug(f'dir_name is {dir_name}')
@@ -78,8 +82,9 @@ def init(cli):
     master.close()
 
 
-@cli.argument('-n', '--name', help='Name of note', default='entry')
-@cli.argument('--date', help='date in filename', action='store_boolean', default=True)
+@cli.argument('-f', '--filename', help='Filename of note', default='entry')
+@cli.argument('-t', '--title', help='Title of note', default='')
+@cli.argument('--no-date', help='No date in filename', action='store_true', default=False)
 @cli.subcommand('Create a new entry')
 def new(cli):
     """ Creates a new entry note """
@@ -88,16 +93,26 @@ def new(cli):
         cli.log.error(f'I can\'t find a {emph("master.tex")} file, '
                       'are you inside an autonotes directory?')
         exit(3)
-    # Make new note
+    # Filename
+    filename = cli.config.new.filename
     today = date.today().strftime("%Y%m%d")
-    filename = f'{cli.config.new.name}-{today}.tex'
+    if cli.config.no_date:
+        filename += f'-{today}'
+    filename += '.tex'
     if os.path.exists(filename):
         cli.log.error(f'File {emph(filename)} already exists.')
         exit(1)
+
+    # Note title
+    title = cli.config.new.title
+    if title == '':
+        title = today
+
+    # Open file for writing
     file = open(filename, 'w')
     cli.log.info(f'Created {emph(filename)}.')
     new_note_str = '\\section{' \
-                   f'{today}' \
+                   f'{title}' \
                    '}\n\n'
     file.write(new_note_str)
     file.close()

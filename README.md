@@ -30,6 +30,8 @@ autonotes init -n name -p preamble.tex
 
 This will copy the specified preamble file into the created directory.
 
+---
+
 ### `new`
 
 When you want to create a new entry, run:
@@ -50,13 +52,13 @@ myNotes
 ```
 
 By default, the file will be named `entry-{date}.tex` where date is the current date.
-You can change the name by using the `-n` option, for example:
+You can change the filename by using the `-f` option, for example:
 
 ```bash
-autonotes new -n lecture
+autonotes new -f lecture
 ```
 
-will result in
+will result in `lecture-20201231.tex` being created
 
 ```
 myNotes
@@ -65,6 +67,14 @@ myNotes
 ├── master.tex
 └── preamble.tex
 ```
+
+By default, the new entry will contain a `\section{}` tag with the date, but you can specify a title using `-t`, for example:
+
+```bash
+autonotes new -t "Title goes here"
+```
+
+---
 
 ### Help
 
