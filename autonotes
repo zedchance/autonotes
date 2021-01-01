@@ -7,6 +7,8 @@ PYTHON_ARGCOMPLETE_OK
 import os
 from datetime import date
 from milc import cli
+import milc.subcommand.config
+import milc.questions
 
 
 def emph(string):
@@ -22,7 +24,7 @@ def main(cli):
     cli.print_usage()
 
 
-@cli.argument('-n', '--name', help='Name of directory to initialize', required=True)
+@cli.argument('-n', '--name', help='Name of directory to initialize')
 @cli.argument('-p', '--preamble', help='Path to preamble file', default='')
 @cli.subcommand('Initialize a new autonotes directory')
 def init(cli):
@@ -30,9 +32,7 @@ def init(cli):
     # Make dir
     dir_name = cli.config.init.name
     if dir_name == None:
-        cli.log.error('Please specify directory name.')
-        cli.print_usage()
-        exit(2)
+        dir_name = milc.questions.question("Enter directory name: ")
     cli.log.debug(f'dir_name is {dir_name}')
     if os.path.isdir(dir_name):
         cli.log.error(f'Directory {emph(dir_name)} already exists.')
@@ -96,7 +96,7 @@ def new(cli):
     # Filename
     filename = cli.config.new.filename
     today = date.today().strftime("%Y%m%d")
-    if cli.config.no_date:
+    if not cli.config.no_date:
         filename += f'-{today}'
     filename += '.tex'
     if os.path.exists(filename):
