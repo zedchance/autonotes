@@ -8,20 +8,27 @@ These commands assume that `autonotes` is added to your `PATH` variable.
 
 ### `init`
 
-To initialize a new note directory run:
+To initialize a new note directory named `myNotes` run:
 
 ```bash
-autonotes init -n name
+autonotes init -n myNotes
 ```
 
-where `name` is the directory name.
-
 This creates a new directory, and creates 2 files: `preamble.tex`, and `master.tex`.
+
+```
+myNotes
+├── master.tex
+└── preamble.tex
+```
+
 You can optionally specify a path to an existing preamble file using `-p`:
 
 ```bash
 autonotes init -n name -p preamble.tex
 ```
+
+This will copy the specified preamble file into the created directory.
 
 ### `new`
 
@@ -33,6 +40,31 @@ autonotes new
 
 inside a directory created by `init`.
 This creates a new .tex file, and adds that file to the `master.tex` file using `\input{}`.
+For example, your directory may look like this now:
+
+```
+myNotes
+├── entry-20201231.tex
+├── master.tex
+└── preamble.tex
+```
+
+By default, the file will be named `entry-{date}.tex` where date is the current date.
+You can change the name by using the `-n` option, for example:
+
+```bash
+autonotes new -n lecture
+```
+
+will result in
+
+```
+myNotes
+├── entry-20201231.tex
+├── lecture-20201231.tex
+├── master.tex
+└── preamble.tex
+```
 
 ### Help
 
