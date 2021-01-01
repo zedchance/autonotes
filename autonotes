@@ -1,0 +1,120 @@
+#!/usr/bin/env python3
+
+import os
+from datetime import date
+from milc import cli
+
+
+def emph(string):
+    """ ANSI emphasis """
+    emph = '{fg_blue}{style_bright}'
+    end = '{style_reset_all}'
+    return f'{emph}{string}{end}'
+
+
+@cli.entrypoint('Main')
+def main(cli):
+    cli.log.info("No subcommand specified")
+    cli.print_usage()
+
+
+@cli.argument('-n', '--name', help='Name of directory to initialize', required=True)
+@cli.argument('-p', '--preamble', help='Path to preamble file', default='')
+@cli.subcommand('Create a new dir')
+def init(cli):
+    """ Creates a new autonotes directory """
+    # Make dir
+    dir_name = cli.config.init.name
+    if dir_name == None:
+        cli.log.error('Please ')
+        cli.print_usage()
+        exit(2)
+    cli.log.debug(f'dir_name is {dir_name}')
+    if os.path.isdir(dir_name):
+        cli.log.error(f'Directory {emph(dir_name)} already exists.')
+        exit(2)
+    cli.log.info(f'Creating {emph(dir_name)} directory.')
+    os.mkdir(dir_name)
+
+    # Preamble
+    preamble_path = cli.config.init.preamble
+    if preamble_path == '':
+        preamble_path = f'{dir_name}/preamble.tex'
+        cli.log.info(f'Creating {emph(preamble_path)}.')
+        preamble_file = open(preamble_path, 'w')
+        preamble_str = f'% {dir_name} preamble\n' \
+                       '\\author{}\n'
+        preamble_file.write(preamble_str)
+    else:
+        cli.log.info(f'Copying {emph(preamble_path)}.')
+        input_preamble = open(preamble_path, 'r')
+        input_preamble_lines = input_preamble.readlines()
+        input_preamble.close()
+        output_preamble = open(f'{dir_name}/preamble.tex', 'w')
+        output_preamble.writelines(input_preamble_lines)
+        output_preamble.close()
+
+    # Create master.tex file
+    master_path = f'{dir_name}/master.tex'
+    cli.log.info(f'Creating {emph(master_path)}.')
+    master = open(master_path, 'w')
+    master_str = f'% {dir_name} master file\n' \
+                 '\n' \
+                 '\\documentclass{article}\n' \
+                 '\\input{preamble.tex}\n' \
+                 '\n' \
+                 '\\title{' \
+                 f'{dir_name}' \
+                 '}\n' \
+                 '\\date{}\n' \
+                 '\n' \
+                 '\\begin{document}\n' \
+                 '\\maketitle\n' \
+                 '\\tableofcontents\n' \
+                 '\\newpage\n' \
+                 '\n%BEGIN NOTES\n%END NOTES\n\n' \
+                 '\\end{document}'
+    master.write(master_str)
+    master.close()
+
+
+@cli.argument('-n', '--name', help='Name of note', default='entry')
+@cli.argument('--date', help='date in filename', action='store_boolean', default=True)
+@cli.subcommand('Create a new entry')
+def new(cli):
+    """ Creates a new entry note """
+    # Check to see if a master.tex file exists
+    if not os.path.isfile('master.tex'):
+        cli.log.error(f'I can\'t find a {emph("master.tex")} file, '
+                      'are you inside an autonotes directory?')
+        exit(3)
+    # Make new note
+    today = date.today().strftime("%Y%m%d")
+    filename = f'{cli.config.new.name}-{today}.tex'
+    if os.path.exists(filename):
+        cli.log.error(f'File {emph(filename)} already exists.')
+        exit(1)
+    file = open(filename, 'w')
+    cli.log.info(f'Created {emph(filename)}.')
+    new_note_str = '\\section{' \
+                   f'{today}' \
+                   '}\n\n'
+    file.write(new_note_str)
+    file.close()
+
+    # Open master file
+    cli.log.info(f'Inserting entry into {emph("master.tex")}.')
+    master = open('master.tex', 'r')
+    lines = master.readlines()
+    master.close()
+    end = lines.index("%END NOTES\n")
+    lines.insert(end, '\\input{'
+                      f'{filename}'
+                      '}\n')
+    master = open('master.tex', 'w')
+    master.writelines(lines)
+    master.close()
+
+
+if __name__ == '__main__':
+    cli()
