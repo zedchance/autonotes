@@ -9,7 +9,7 @@ import milc.subcommand.config
 import milc.questions
 
 # MILC object with version number
-cli = MILC("autonotes v0.1.0")
+cli = MILC("autonotes v0.1.1")
 
 
 def emph(string):
