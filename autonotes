@@ -46,6 +46,67 @@ def check_in_autonotes_dir():
         exit(3)
 
 
+def __add(files):
+    """ Adds files to master.tex """
+    # Open master.tex and read in lines
+    master = open('master.tex', 'r')
+    lines = master.readlines()
+    master.close()
+
+    # Find end notes tag
+    try:
+        end = lines.index("%END NOTES\n")
+    except:
+        cli.log.error(f'Incorrect {emph("master.tex")} file, aborting')
+        exit(1)
+
+    # Insert files
+    for file in files:
+        if '.tex' not in file:
+            cli.log.warning(f'{emph(file)} isn\'t a .tex file, copying anyway')
+        cli.log.info(f'Inserting {emph(file)} into {emph("master.tex")}')
+        lines.insert(end, '\\input{'
+                          f'{file}'
+                          '}\n')
+        end += 1
+
+    # Write new master.tex
+    master = open('master.tex', 'w')
+    master.writelines(lines)
+    master.close()
+
+
+def __rm(files):
+    """ Remove files from master.tex """
+    # Open master file and read in lines
+    master = open('master.tex', 'r')
+    lines = master.readlines()
+    master.close()
+
+    # Remove lines from master.file if they exist
+    for file in files:
+        if not os.path.isfile(file):
+            cli.log.error(f'I can\'t find {emph(file)}.')
+        else:
+            try:
+                lines.remove('\\input{'
+                             f'{file}'
+                             '}\n')
+                cli.log.info(f'Removed {emph(file)} from {emph("master.tex")}')
+
+                # Delete files if --delete flag is on
+                if cli.config.rm.delete:
+                    cli.log.info(f'Deleting {emph(file)}')
+                    os.remove(file)
+            except:
+                cli.log.error(f'I can\'t find {emph(file)} in the {emph("master.tex")} file.')
+
+    # Write new master.tex
+    master = open('master.tex', 'w')
+    master.writelines(lines)
+    master.close()
+
+
 @cli.entrypoint('autonotes – automatically create LaTeX notes')
 def main(cli):
     cli.log.info("No subcommand specified")
@@ -78,7 +139,7 @@ def init(cli):
         cli.log.error(f'{emph(preamble_path)} doesn\'t exist, can\'t copy')
         base_preamble(dir_name)
     else:
-        if not '.tex' in preamble_path:
+        if '.tex' not in preamble_path:
             cli.log.warning(f'{emph(preamble_path)} isn\'t a .tex file, copying anyway')
         cli.log.info(f'Copying {emph(preamble_path)}')
         input_preamble = open(preamble_path, 'r')
@@ -118,7 +179,7 @@ def init(cli):
 @cli.argument('--no-date', action='store_true', help='No date in filename')
 @cli.subcommand('Create a new entry')
 def new(cli):
-    """ Creates a new entry note """
+    """ Creates a new entry  """
     check_in_autonotes_dir()
 
     # Filename
@@ -152,22 +213,21 @@ def new(cli):
     file.write(new_note_str)
     file.close()
 
-    # Open master file
-    cli.log.info(f'Inserting entry into {emph("master.tex")}')
-    master = open('master.tex', 'r')
-    lines = master.readlines()
-    master.close()
-    try:
-        end = lines.index("%END NOTES\n")
-    except:
-        cli.log.error(f'Incorrect {emph("master.tex")} file, aborting')
-        exit(1)
-    lines.insert(end, '\\input{'
-                      f'{filename}'
-                      '}\n')
-    master = open('master.tex', 'w')
-    master.writelines(lines)
-    master.close()
+    # Add the new file to master.tex
+    __add([filename])
+
+
+@cli.argument('file', nargs='*', help='Files to add to master')
+@cli.subcommand('Add a .tex file to master')
+def add(cli):
+    """ Adds a .tex file to the master file """
+    check_in_autonotes_dir()
+
+    # File args
+    files = cli.config.add.file
+
+    # Add the files to master.tex
+    __add(files)
 
 
 @cli.argument('--delete', help='Remove the entry from the master, and remove the file', action='store_true')
@@ -180,33 +240,8 @@ def rm(cli):
     # File args
     files = cli.config.rm.file
 
-    # Read in current master.tex
-    master = open('master.tex', 'r')
-    lines = master.readlines()
-    master.close()
-
-    # Remove files that don't exist from args
-    for file in files:
-        if not os.path.isfile(file):
-            cli.log.error(f'I can\'t find {emph(file)}.')
-        else:
-            try:
-                lines.remove('\\input{'
-                            f'{file}'
-                             '}\n')
-                cli.log.info(f'Removed {emph(file)} from {emph("master.tex")}')
-
-                # Delete files if --delete flag is on
-                if cli.config.rm.delete:
-                    cli.log.info(f'Deleting {emph(file)}')
-                    os.remove(file)
-            except:
-                cli.log.error(f'I can\'t find {emph(file)} in the {emph("master.tex")} file.')
-
-    # Write new master.tex
-    master = open('master.tex', 'w')
-    master.writelines(lines)
-    master.close()
+    # Remove the files
+    __rm(files)
 
 
 if __name__ == '__main__':

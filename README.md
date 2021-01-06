@@ -82,6 +82,16 @@ autonotes new -t "Title goes here"
 
 ---
 
+### `add`
+
+To add an existing file to `master.tex`, you can use the `add` command.
+
+```bash
+autonotes add file
+```
+
+---
+
 ### `rm`
 
 If you want to remove an entry from the `master.tex` file, you can use the `rm` command.
@@ -107,5 +117,6 @@ To see usage about a command, use `--help`, for example:
 autonotes --help
 autonotes init --help
 autonotes new --help
+autonotes add --help
 autonotes rm --help
 ```
