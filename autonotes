@@ -3,13 +3,17 @@
 """
 
 import os
+import subprocess
 from datetime import datetime
 from milc import MILC
 import milc.subcommand.config
 import milc.questions
 
+# Version number
+version = subprocess.check_output(["git", "describe", "--tags"]).strip().decode()
+
 # MILC object with version number
-cli = MILC("autonotes v0.1.1")
+cli = MILC(f'autonotes {version}')
 
 
 def emph(string):
@@ -114,8 +118,6 @@ def new(cli):
 
     # Filename
     filename = cli.config.new.filename
-    # TODO figure out the datetime_fmt stuff, and get the config to work
-    # cli.config.general.datetime_fmt
     file_date = datetime.now().strftime("%Y%m%d")
     today = datetime.now().strftime("%b %m")
     if not cli.config.no_date:
