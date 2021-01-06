@@ -10,7 +10,8 @@ import milc.subcommand.config
 import milc.questions
 
 # Version number
-version = subprocess.check_output(["git", "describe", "--tags"]).strip().decode()
+cwd = str(__file__).removesuffix("/autonotes")
+version = subprocess.check_output(["git", "describe", "--tags"], cwd=cwd).strip().decode()
 
 # MILC object with version number
 cli = MILC(f'autonotes {version}')
