@@ -115,7 +115,7 @@ def init(cli):
 
 @cli.argument('-f', '--filename', help='Filename of note', default='entry')
 @cli.argument('-t', '--title', help='Title of note', default='')
-@cli.argument('--no-date', help='No date in filename', action='store_true', default=False)
+@cli.argument('--no-date', action='store_true', help='No date in filename')
 @cli.subcommand('Create a new entry')
 def new(cli):
     """ Creates a new entry note """
@@ -124,8 +124,8 @@ def new(cli):
     # Filename
     filename = cli.config.new.filename
     file_date = datetime.now().strftime("%Y%m%d")
-    today = datetime.now().strftime("%b %m")
-    if not cli.config.no_date:
+    today = datetime.now().strftime("%b %d")
+    if not cli.config.new.no_date:
         filename += f'-{file_date}'
     filename += '.tex'
     if os.path.exists(filename):
