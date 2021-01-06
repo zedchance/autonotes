@@ -30,6 +30,7 @@ def base_preamble(dir_name):
     preamble_file = open(preamble_path, 'w')
     preamble_str = f'% {dir_name} preamble\n' \
                    '\\usepackage{imakeidx}\n' \
+                   '\\usepackage{marginnote}\n' \
                    '\\makeindex[columns=3, title=Date Index, intoc]\n' \
                    '\n% Author name\n' \
                    '\\author{}\n'
@@ -143,11 +144,11 @@ def new(cli):
                    '\\section{' \
                    f'{title}' \
                    '}\n' \
-                   '\\marginpar{' \
+                   '\\marginnote{' \
                    f'{today}' \
                    '\\index{' \
                    f'{today}' \
-                   '}}\n'
+                   '}}{.2cm}\n'
     file.write(new_note_str)
     file.close()
 
