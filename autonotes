@@ -148,7 +148,7 @@ def new(cli):
                    f'{today}' \
                    '\\index{' \
                    f'{today}' \
-                   '}}{.2cm}\n'
+                   '}}[.2cm]\n'
     file.write(new_note_str)
     file.close()
 
@@ -170,7 +170,7 @@ def new(cli):
     master.close()
 
 
-@cli.argument('-f', '--force', help='Remove the entry from the master, and remove the file', action='store_true')
+@cli.argument('--delete', help='Remove the entry from the master, and remove the file', action='store_true')
 @cli.argument('file', nargs='*', help='Files to remove from master')
 @cli.subcommand('Remove an entry from master')
 def rm(cli):
@@ -195,8 +195,14 @@ def rm(cli):
                             f'{file}'
                              '}\n')
                 cli.log.info(f'Removed {emph(file)} from {emph("master.tex")}')
+
+                # Delete files if --delete flag is on
+                if cli.config.rm.delete:
+                    cli.log.info(f'Deleting {emph(file)}')
+                    os.remove(file)
             except:
                 cli.log.error(f'I can\'t find {emph(file)} in the {emph("master.tex")} file.')
+
 
     # Write new master.tex
     master = open('master.tex', 'w')
