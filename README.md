@@ -74,6 +74,21 @@ By default, the new entry will contain a `\section{}` tag with the date, but you
 autonotes new -t "Title goes here"
 ```
 
+### `rm`
+
+If you want to remove an entry from the `master.tex` file, you can use the `rm` command.
+
+```bash
+autonotes rm entry-20201231.tex
+```
+
+will remove the `\input{}` line from `master.tex` but leave the file alone.
+If you want to delete the file also, use the `--delete` flag.
+
+```bash
+autonotes rm --delete entry-20211231.tex
+```
+
 ---
 
 ### Help
