@@ -133,7 +133,8 @@ def new(cli):
     # Open file for writing
     file = open(filename, 'w')
     cli.log.info(f'Created {emph(filename)}')
-    new_note_str = '\\section{' \
+    new_note_str = f'% {filename}\n\n' \
+                   '\\section{' \
                    f'{title}' \
                    '}\n' \
                    '\\marginpar{' \
