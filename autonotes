@@ -37,6 +37,14 @@ def base_preamble(dir_name):
     preamble_file.close()
 
 
+def check_in_autonotes_dir():
+    """ Check if inside directory with master.tex file """
+    if not os.path.isfile('master.tex'):
+        cli.log.error(f'I can\'t find a {emph("master.tex")} file, '
+                      'are you inside an autonotes directory?')
+        exit(3)
+
+
 @cli.entrypoint('autonotes – automatically create LaTeX notes')
 def main(cli):
     cli.log.info("No subcommand specified")
@@ -44,7 +52,7 @@ def main(cli):
 
 
 @cli.argument('-n', '--name', help='Name of directory to initialize')
-@cli.argument('-p', '--preamble', help='Path to preamble file', default=None)
+@cli.argument('-p', '--preamble', help='Path to an existing preamble file', default=None)
 @cli.subcommand('Initialize a new autonotes directory')
 def init(cli):
     """ Creates a new autonotes directory """
@@ -110,11 +118,7 @@ def init(cli):
 @cli.subcommand('Create a new entry')
 def new(cli):
     """ Creates a new entry note """
-    # Check to see if a master.tex file exists
-    if not os.path.isfile('master.tex'):
-        cli.log.error(f'I can\'t find a {emph("master.tex")} file, '
-                      'are you inside an autonotes directory?')
-        exit(3)
+    check_in_autonotes_dir()
 
     # Filename
     filename = cli.config.new.filename
@@ -163,6 +167,42 @@ def new(cli):
     master = open('master.tex', 'w')
     master.writelines(lines)
     master.close()
+
+
+@cli.argument('-f', '--force', help='Remove the entry from the master, and remove the file', action='store_true')
+@cli.argument('file', nargs='*', help='Files to remove from master')
+@cli.subcommand('Remove an entry from master')
+def rm(cli):
+    """ Removes an entry from the master file """
+    check_in_autonotes_dir()
+
+    # File args
+    files = cli.config.rm.file
+
+    # Read in current master.tex
+    master = open('master.tex', 'r')
+    lines = master.readlines()
+    master.close()
+
+    # Remove files that don't exist from args
+    for file in files:
+        if not os.path.isfile(file):
+            cli.log.error(f'I can\'t find {emph(file)}.')
+        else:
+            try:
+                lines.remove('\\input{'
+                            f'{file}'
+                             '}\n')
+                cli.log.info(f'Removed {emph(file)} from {emph("master.tex")}')
+            except:
+                cli.log.error(f'I can\'t find {emph(file)} in the {emph("master.tex")} file.')
+
+    # Write new master.tex
+    master = open('master.tex', 'w')
+    master.writelines(lines)
+    master.close()
+
+    # TODO If -f then remove the file also
 
 
 if __name__ == '__main__':
