@@ -23,7 +23,7 @@ def emph(string):
     return f'{emph}{string}{end}'
 
 
-def base_preamble(dir_name):
+def __base_preamble(dir_name):
     """ Create a base preamble.tex file """
     preamble_path = f'{dir_name}/preamble.tex'
     cli.log.info(f'Creating bare {emph(preamble_path)}')
@@ -38,7 +38,7 @@ def base_preamble(dir_name):
     preamble_file.close()
 
 
-def check_in_autonotes_dir():
+def __check_in_autonotes_dir():
     """ Check if inside directory with master.tex file """
     if not os.path.isfile('master.tex'):
         cli.log.error(f'I can\'t find a {emph("master.tex")} file, '
@@ -141,13 +141,13 @@ def init(cli):
     # Preamble
     preamble_path = cli.config.init.preamble
     if preamble_path is None:
-        base_preamble(dir_name)
+        __base_preamble(dir_name)
     elif os.path.isdir(preamble_path):
         cli.log.error(f'{emph(preamble_path)} is a directory, can\'t copy')
-        base_preamble(dir_name)
+        __base_preamble(dir_name)
     elif not os.path.exists(preamble_path):
         cli.log.error(f'{emph(preamble_path)} doesn\'t exist, can\'t copy')
-        base_preamble(dir_name)
+        __base_preamble(dir_name)
     else:
         if '.tex' not in preamble_path:
             cli.log.warning(f'{emph(preamble_path)} isn\'t a .tex file, copying anyway')
@@ -190,7 +190,7 @@ def init(cli):
 @cli.subcommand('Create a new entry')
 def new(cli):
     """ Creates a new entry  """
-    check_in_autonotes_dir()
+    __check_in_autonotes_dir()
 
     # Filename
     filename = cli.config.new.filename
@@ -231,7 +231,7 @@ def new(cli):
 @cli.subcommand('Add a .tex file to master')
 def add(cli):
     """ Adds a .tex file to the master file """
-    check_in_autonotes_dir()
+    __check_in_autonotes_dir()
 
     # File args
     files = cli.config.add.file
@@ -245,7 +245,7 @@ def add(cli):
 @cli.subcommand('Remove an entry from master')
 def rm(cli):
     """ Removes an entry from the master file """
-    check_in_autonotes_dir()
+    __check_in_autonotes_dir()
 
     # File args
     files = cli.config.rm.file
