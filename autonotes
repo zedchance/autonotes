@@ -63,17 +63,20 @@ def __add(files):
 
     # Insert files into master.tex
     for file in files:
+        line_to_insert = '\\input{' \
+                      f'{file}' \
+                      '}\n'
         if '.tex' not in file:
             cli.log.warning(f'{emph(file)} isn\'t a .tex file, copying anyway')
+        if lines.__contains__(line_to_insert):
+            if not milc.questions.yesno(f'{emph(file)} already exists in {emph("master.tex")}, '
+                                    f'do you want to insert again?'):
+                continue
         cli.log.info(f'Inserting {emph(file)} into {emph("master.tex")}')
         if 'preamble.tex' in file:
-            lines.insert(start, '\\input{'
-                              f'{file}'
-                              '}\n')
+            lines.insert(start, line_to_insert)
         else:
-            lines.insert(end, '\\input{'
-                              f'{file}'
-                              '}\n')
+            lines.insert(end, line_to_insert)
             end += 1
 
     # Write new master.tex
@@ -92,7 +95,7 @@ def __rm(files):
     # Remove lines from master.tex if they exist
     for file in files:
         # Ask if the user really wants to remove preamble.tex
-        if file == 'preamble.tex':
+        if 'preamble.tex' in file:
             if not milc.questions.yesno(f'Are you sure you want to remove {emph(file)}?'):
                 continue
         if not os.path.isfile(file):
