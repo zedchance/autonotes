@@ -74,6 +74,8 @@ By default, the new entry will contain a `\section{}` tag with the date, but you
 autonotes new -t "Title goes here"
 ```
 
+---
+
 ### `rm`
 
 If you want to remove an entry from the `master.tex` file, you can use the `rm` command.
@@ -99,4 +101,5 @@ To see usage about a command, use `--help`, for example:
 autonotes --help
 autonotes init --help
 autonotes new --help
+autonotes rm --help
 ```
