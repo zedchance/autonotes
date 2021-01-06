@@ -55,20 +55,26 @@ def __add(files):
 
     # Find end notes tag
     try:
+        start = lines.index("\\documentclass{article}\n") + 1
         end = lines.index("%END NOTES\n")
     except:
         cli.log.error(f'Incorrect {emph("master.tex")} file, aborting')
         exit(1)
 
-    # Insert files
+    # Insert files into master.tex
     for file in files:
         if '.tex' not in file:
             cli.log.warning(f'{emph(file)} isn\'t a .tex file, copying anyway')
         cli.log.info(f'Inserting {emph(file)} into {emph("master.tex")}')
-        lines.insert(end, '\\input{'
-                          f'{file}'
-                          '}\n')
-        end += 1
+        if 'preamble.tex' in file:
+            lines.insert(start, '\\input{'
+                              f'{file}'
+                              '}\n')
+        else:
+            lines.insert(end, '\\input{'
+                              f'{file}'
+                              '}\n')
+            end += 1
 
     # Write new master.tex
     master = open('master.tex', 'w')
@@ -83,8 +89,12 @@ def __rm(files):
     lines = master.readlines()
     master.close()
 
-    # Remove lines from master.file if they exist
+    # Remove lines from master.tex if they exist
     for file in files:
+        # Ask if the user really wants to remove preamble.tex
+        if file == 'preamble.tex':
+            if not milc.questions.yesno(f'Are you sure you want to remove {emph(file)}?'):
+                continue
         if not os.path.isfile(file):
             cli.log.error(f'I can\'t find {emph(file)}.')
         else:
