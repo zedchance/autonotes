@@ -7,7 +7,7 @@ A tool to automatically create LaTeX documents, intended for lecture notes.
 Make sure you install required dependencies with
 
 ```
-pipenv install
+pip3 install -r requirements.txt
 ```
 
 These commands assume that `autonotes` is added to your `PATH` variable.
