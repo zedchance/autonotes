@@ -173,7 +173,7 @@ def init(cli):
                  '\\input{preamble.tex}\n' \
                  '\n' \
                  '\\title{' \
-                 f'{dir_name}' \
+                 f'{dir_name.replace("_", " ")}' \
                  '}\n' \
                  '\\date{}\n' \
                  '\n' \
@@ -217,7 +217,7 @@ def new(cli):
     cli.log.info(f'Created {emph(filename)}')
     new_note_str = f'% {filename}\n\n' \
                    '\\section{' \
-                   f'{title}' \
+                   f'{title.replace("_", " ")}' \
                    '}\n' \
                    '\\marginnote{' \
                    f'{today}' \
